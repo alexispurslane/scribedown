@@ -1,0 +1,8 @@
+[package]
+name = "scribedown"
+author = "Alexis Dumas"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+gtk = "0.15.3"
