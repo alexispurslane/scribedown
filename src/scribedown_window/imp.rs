@@ -1,4 +1,8 @@
-use gtk::prelude::*;
+use std::cell::{Cell, RefCell};
+use std::rc::Rc;
+
+use gtk::glib::clone;
+use gtk::{prelude::*, TextBuffer};
 use gtk::subclass::prelude::*;
 use gtk::{glib, CompositeTemplate};
 
@@ -36,6 +40,16 @@ pub struct Window {
     pub redo_button: TemplateChild<gtk::Button>,
     #[template_child]
     pub preferences_button: TemplateChild<gtk::Button>,
+
+    // Internal state
+    pub state: Rc<RefCell<ScribeDownWindowState>>,
+}
+
+#[derive(Default)]
+pub struct ScribeDownWindowState {
+    pub project_path: Option<String>,
+    pub project_files: Vec<(String, String)>,
+    pub open_files: Vec<(String, String, TextBuffer)>,
 }
 
 #[glib::object_subclass]
@@ -56,10 +70,7 @@ impl ObjectSubclass for Window {
 impl ObjectImpl for Window {
     fn constructed(&self, obj: &Self::Type) {
         self.parent_constructed(obj);
-
-        self.open_button.connect_clicked(move |open_button| {
-            println!("Clicked!");
-        });
+        obj.setup_callbacks();
     }
 }
 
