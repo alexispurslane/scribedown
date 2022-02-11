@@ -48,37 +48,23 @@ interoperability, by choosing a DE to target. We chose GNOME.
 
 ### To-do list
 
--[X] Open project folder
-
--[X] Get list of markdown documents in project and display them on the sidebar
-
--[X] Display markdown file title from top header or YAML metadata in document
-
+- [X] Open project folder
+- [X] Get list of markdown documents in project and display them on the sidebar
+- [X] Display markdown file title from top header or YAML metadata in document
 list
-
--[X] Open document contents when clicked in the side bar
-
--[ ] Search through files in document list
-
--[ ] When a file is clicked, open in new tab or switch to tab
-
--[ ] Allow closing tabs
-
--[ ] Create new file when "New" button is pressed
-
--[ ] Save file contents on <kbd>Ctrl</kbd> + <kbd>S</kbd>
-
--[ ] Undo and redo key commands
-
--[ ] Update file title when file is changed in document list sidebar
-
--[ ] Parse tags from YAML metadata for each document and display them in the
+- [X] Open document contents when clicked in the side bar
+- [ ] Search through files in document list
+- [ ] When a file is clicked, open in new tab or switch to tab
+- [ ] Allow closing tabs
+- [ ] Create new file when "New" button is pressed
+- [ ] Save file contents on <kbd>Ctrl</kbd> + <kbd>S</kbd>
+- [ ] Undo and redo key commands
+- [ ] Update file title when file is changed in document list sidebar
+- [ ] Parse tags from YAML metadata for each document and display them in the
 document list rows
-
--[ ] Filter documents by tag
-
--[ ] Open file by name using <kbd>Ctrl</kbd> + <kbd>P</kbd>
+- [ ] Filter documents by tag
+- [ ] Open file by name using <kbd>Ctrl</kbd> + <kbd>P</kbd>
 
 ### Demo videos
 
-[Alpha v0.0.1 demo](https://github.com/alex-dumas/scribedown/AlphaDemo.mp4)
+[Alpha v0.0.1 demo](https://raw.githubusercontent.com/alex-dumas/scribedown/master/AlphaDemo.mp4)
