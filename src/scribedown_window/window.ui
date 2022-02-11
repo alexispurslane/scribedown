@@ -134,6 +134,7 @@
             <property name="margin-start">10</property>
             <property name="margin-end">10</property>
             <property name="margin-top">5</property>
+            <property name="margin-bottom">5</property>
             <property name="orientation">vertical</property>
             <property name="spacing">5</property>
             <child>
@@ -155,11 +156,13 @@
               </packing>
             </child>
             <child>
-              <object class="GtkListBox" id="document_list">
-                <property name="width-request">250</property>
+              <object class="GtkSearchEntry" id="document_search">
                 <property name="visible">True</property>
-                <property name="can-focus">False</property>
-                <property name="selection-mode">browse</property>
+                <property name="can-focus">True</property>
+                <property name="primary-icon-stock">gtk-find</property>
+                <property name="primary-icon-activatable">False</property>
+                <property name="primary-icon-sensitive">False</property>
+                <property name="placeholder-text" translatable="yes">Search documents...</property>
               </object>
               <packing>
                 <property name="expand">False</property>
@@ -168,13 +171,29 @@
               </packing>
             </child>
             <child>
-              <object class="GtkSearchEntry" id="document_search">
+              <object class="GtkScrolledWindow">
+                <property name="width-request">250</property>
                 <property name="visible">True</property>
                 <property name="can-focus">True</property>
-                <property name="primary-icon-stock">gtk-find</property>
-                <property name="primary-icon-activatable">False</property>
-                <property name="primary-icon-sensitive">False</property>
-                <property name="placeholder-text" translatable="yes">Search documents...</property>
+                <property name="margin-bottom">5</property>
+                <property name="hexpand">True</property>
+                <property name="vexpand">True</property>
+                <property name="hscrollbar-policy">never</property>
+                <property name="shadow-type">in</property>
+                <child>
+                  <object class="GtkViewport">
+                    <property name="visible">True</property>
+                    <property name="can-focus">False</property>
+                    <child>
+                      <object class="GtkListBox" id="document_list">
+                        <property name="width-request">245</property>
+                        <property name="visible">True</property>
+                        <property name="can-focus">False</property>
+                        <property name="selection-mode">browse</property>
+                      </object>
+                    </child>
+                  </object>
+                </child>
               </object>
               <packing>
                 <property name="expand">False</property>

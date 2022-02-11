@@ -483,6 +483,7 @@ name = "scribedown"
 version = "0.1.0"
 dependencies = [
  "gtk",
+ "once_cell",
 ]
 
 [[package]]

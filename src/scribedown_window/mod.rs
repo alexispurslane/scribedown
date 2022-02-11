@@ -1,11 +1,3 @@
-use std::cell::RefCell;
-use std::rc::Rc;
-use std::sync::mpsc::{channel, Receiver, Sender};
-use std::sync::Arc;
-
-use gtk::glib::clone;
-use gtk::prelude::*;
-use gtk::subclass::prelude::ObjectSubclassIsExt;
 use gtk::{gio, glib};
 
 mod imp;

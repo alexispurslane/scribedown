@@ -1,8 +1,4 @@
-use std::cell::{Cell, RefCell};
-use std::rc::Rc;
-
-use gtk::glib::clone;
-use gtk::{prelude::*, TextBuffer};
+use gtk::{prelude::*};
 use gtk::subclass::prelude::*;
 use gtk::{glib, CompositeTemplate};
 

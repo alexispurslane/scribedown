@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<interface>
+  <template class="DocumentListListBoxRow" parent="GtkListBoxRow">
+    <property name="width-request">240</property>
+    <property name="height-request">50</property>
+    <property name="visible">True</property>
+    <property name="can-focus">True</property>
+    <child>
+      <object class="GtkBox">
+        <property name="visible">True</property>
+        <property name="can-focus">False</property>
+        <property name="margin-start">5</property>
+        <property name="margin-end">5</property>
+        <property name="margin-top">10</property>
+        <property name="margin-bottom">10</property>
+        <property name="orientation">vertical</property>
+        <property name="spacing">5</property>
+        <child>
+          <object class="GtkLabel" id="title_label">
+            <property name="visible">True</property>
+            <property name="can-focus">False</property>
+            <property name="label" translatable="yes">Untitled 1</property>
+            <property name="ellipsize">end</property>
+            <attributes>
+              <attribute name="font-desc" value="Sans Bold 10" />
+              <attribute name="scale" value="2" />
+            </attributes>
+          </object>
+          <packing>
+            <property name="expand">False</property>
+            <property name="fill">True</property>
+            <property name="position">0</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkLabel" id="path_label">
+            <property name="visible">True</property>
+            <property name="can-focus">False</property>
+            <property name="label" translatable="yes">~/Documents/path/to/file</property>
+            <attributes>
+              <attribute name="font-desc" value="Sans Italic 10" />
+              <attribute name="weight" value="ultralight" />
+              <attribute name="foreground" value="#777776767b7b" />
+            </attributes>
+          </object>
+          <packing>
+            <property name="expand">False</property>
+            <property name="fill">True</property>
+            <property name="position">1</property>
+          </packing>
+        </child>
+      </object>
+    </child>
+  </template>
+</interface>
