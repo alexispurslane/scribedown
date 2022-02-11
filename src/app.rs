@@ -1,7 +1,8 @@
 use crate::document_list;
 use crate::file_operations;
-use gtk::prelude::*;
-use gtk::subclass::prelude::ObjectSubclassIsExt;
+use crate::macro_utils::*;
+use gtk::TextBuffer;
+use gtk::{glib::Value, prelude::*, subclass::prelude::*};
 use std::cell::RefCell;
 use std::collections::HashMap;
 use std::rc::Rc;
@@ -46,15 +47,64 @@ pub struct App {
 impl App {
     /// Connect all callbacks
     pub fn connect_all(sd: Rc<RefCell<Self>>) {
-        let outer_sd = sd.clone();
-        let osd = outer_sd.borrow();
+        // NOTE: the outer pointers to `sd`, formatted like `sd_for_*`, are
+        // done in order to prevent the callback from borrowing the original
+        // pointer when it creates its own pointer, which we need to keep free
+        // to continue making more pointers. This happens because using
+        // something inside a `move` callback borrows it.
 
         // Connect open button callback
-        let button = &osd.window.imp().open_button;
-        button.connect_clicked(move |_| {
-            gtk::glib::MainContext::default()
-                .spawn_local(Self::open_project_dialog(Rc::clone(&sd)));
-        });
+        let sd_for_button = sd.clone();
+        {
+            let osd = sd.borrow();
+            let button = &osd.window.imp().open_button;
+
+            button.connect_clicked(move |_| {
+                // Launch dialog in new thread so it doesn't hang this one
+                gtk::glib::MainContext::default()
+                    .spawn_local(Self::open_project_dialog(Rc::clone(&sd_for_button)));
+            });
+        }
+
+        // Put the contents of the currently selected document in the text
+        // editor and switch the notebook tab to the correct tab
+        let sd_for_list = sd.clone();
+        {
+            let osd = sd.borrow();
+            let document_list = &osd.window.imp().document_list;
+
+            document_list.connect_row_selected(move |_dl, row| {
+                println!("Row selected!");
+
+                // Get a pointer to the state to use for this callback in
+                // perpetuity, and borrow it.
+                let sd3 = Rc::clone(&sd_for_list);
+                let osd = sd3.borrow();
+
+                // Get the GUI list box row that was just selected
+                let row = unwrap_or_return!(row);
+                let list_box_row =
+                    unwrap_or_return!(row.downcast_ref::<document_list::ListBoxRow>());
+
+                // Get the row data associated with that GUI element
+                let row_data_val: Value = list_box_row.property("row-data");
+                let row_data = unwrap_ok_or_return!(row_data_val.get::<document_list::RowData>());
+                let path = row_data.property::<String>("path");
+                println!("Path: {:?}", path);
+
+                // Get document that that row data points to from the current project
+                let project = unwrap_or_return!(&osd.state.project);
+                let doc = unwrap_or_return!(project.docs.get(&path));
+                println!("Document title: {:?}", doc.title);
+
+                // Update the text editor
+                let text_buffer = TextBuffer::builder()
+                    .text(doc.contents.clone().unwrap().as_str())
+                    .build();
+
+                osd.window.imp().text_editor.set_buffer(Some(&text_buffer));
+            });
+        }
     }
 
     /// Open a folder chooser dialog which, when a folder is selected:

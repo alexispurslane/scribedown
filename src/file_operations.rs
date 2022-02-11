@@ -3,7 +3,7 @@ use lazy_static::lazy_static;
 use regex::Regex;
 use std::collections::HashMap;
 use std::fs::{read_dir, File};
-use std::io::{BufRead, BufReader, Error, Read};
+use std::io::Read;
 
 pub fn get_md_files(path: String) -> HashMap<String, Document> {
     if let Ok(paths) = read_dir(path) {
@@ -14,6 +14,9 @@ pub fn get_md_files(path: String) -> HashMap<String, Document> {
             // Basic metadata about file
             let full_path = String::from(p.path().to_string_lossy());
             let mut file_title = String::from(p.file_name().to_string_lossy());
+            if !file_title.ends_with(".md") {
+                continue;
+            }
 
             // We're going to have to read the file anyway to get the title, might as well just store the contents now too.
             let mut file =

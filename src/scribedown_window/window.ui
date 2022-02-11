@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- Generated with glade 3.38.2 -->
 <interface>
-  <requires lib="gtk+" version="3.24"/>
+  <requires lib="gtk+" version="3.24" />
   <object class="GtkPopover" id="popover1">
     <property name="can-focus">False</property>
     <child>
@@ -146,7 +146,7 @@
                 <property name="label" translatable="yes">Documents</property>
                 <property name="justify">center</property>
                 <attributes>
-                  <attribute name="weight" value="bold"/>
+                  <attribute name="weight" value="bold" />
                 </attributes>
               </object>
               <packing>
@@ -189,14 +189,14 @@
                         <property name="width-request">245</property>
                         <property name="visible">True</property>
                         <property name="can-focus">False</property>
-                        <property name="selection-mode">browse</property>
+                        <property name="activate-on-single-click">False</property>
                       </object>
                     </child>
                   </object>
                 </child>
               </object>
               <packing>
-                <property name="expand">False</property>
+                <property name="expand">True</property>
                 <property name="fill">True</property>
                 <property name="position">2</property>
               </packing>
@@ -204,7 +204,7 @@
           </object>
           <packing>
             <property name="resize">False</property>
-            <property name="shrink">True</property>
+            <property name="shrink">False</property>
           </packing>
         </child>
         <child>
@@ -218,8 +218,16 @@
                 <property name="shadow-type">in</property>
                 <child>
                   <object class="GtkTextView" id="text_editor">
+                    <property name="width-request">700</property>
                     <property name="visible">True</property>
                     <property name="can-focus">True</property>
+                    <property name="is-focus">True</property>
+                    <property name="halign">center</property>
+                    <property name="margin-top">10</property>
+                    <property name="wrap-mode">word</property>
+                    <style>
+                      <class name="textview" />
+                    </style>
                   </object>
                 </child>
               </object>
@@ -235,7 +243,7 @@
               </packing>
             </child>
             <child>
-              <placeholder/>
+              <placeholder />
             </child>
             <child type="tab">
               <object class="GtkLabel">
@@ -249,7 +257,7 @@
               </packing>
             </child>
             <child>
-              <placeholder/>
+              <placeholder />
             </child>
             <child type="tab">
               <object class="GtkLabel">
