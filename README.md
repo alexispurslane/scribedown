@@ -1,5 +1,10 @@
 # ScribeDown
 
+![Build](https://github.com/alex-dumas/scribedown/actions/workflows/rust.yml/badge.svg)
+
+Current version: `v0.0.1`
+Feature level: [See the roadmap](#roadmap)
+
 ![Scribedown v0.0.1 screenshot](./screenshotv0.0.1.png)
 
 ## Beautiful, Clean, Writer-Oriented
@@ -46,11 +51,11 @@ interface around your document and integrates well with the surrounding Desktop
 Environment. In order to do this, we have to sacrifice some platform
 interoperability, by choosing a DE to target. We chose GNOME.
 
-## Progress So Far
+<a id="roadmap"></a>
 
-### To-do list
+## Roadmap 
 
-## Version 0.1.0 Roadmap
+### Version 0.1.0 Roadmap
 - [X] Open project folder
 - [X] Get list of markdown documents in project and display them on the sidebar
 - [X] Display markdown file title from top header or YAML metadata in document
@@ -72,19 +77,19 @@ document list rows
   the textview
 - [ ] Update parsing and tags every time a change is made
 
-## Version 0.2.0 Roadmap
+### Version 0.2.0 Roadmap
 
 - [ ] Automatically fold YAML metadata
 - [ ] Hide Markdown formatting entirely except when adjacent to cursor
 - [ ] Get document outline and display in alternate sidebar tab
 
-## Version 0.3.0 Roadmap
+### Version 0.3.0 Roadmap
 
 - [ ] Dialog to view and modify basic YAML metadata for a file
 - [ ] Programmable dialog to to publish projects
 - [ ] Store project metadata
 - [ ] Store application state, such as what files are open
 
-### Demo videos
+## Demo videos
 
 [Alpha v0.0.1 demo](https://raw.githubusercontent.com/alex-dumas/scribedown/master/AlphaDemo.mp4)
