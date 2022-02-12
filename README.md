@@ -1,7 +1,5 @@
 # ScribeDown
 
-![Build](https://github.com/alex-dumas/scribedown/actions/workflows/rust.yml/badge.svg)
-
 Current version: `v0.0.1`
 Feature level: [See the roadmap](#roadmap)
 
