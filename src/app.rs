@@ -113,6 +113,9 @@ impl App {
     fn open_document(row: Option<&gtk::ListBoxRow>, sd3: Rc<RefCell<Self>>) {
         // Borrow state stored in pointer
         let mut osd = sd3.borrow_mut();
+        // NOTE: This is probably dangerous, but as long as we only need to
+        // mutate `osd.state`, and read from `osd.window.imp()`, it should be
+        // fine!
         let osd = &mut *osd;
 
         // Get the GUI list box row that was just selected
