@@ -9,8 +9,7 @@ glib::wrapper! {
 }
 
 impl MarkdownEditor {
-    pub fn new(contents: &String) -> Self {
-        println!("{:?}", contents);
-        glib::Object::new(&[("contents", contents)]).expect("Failed to create MarkdownEditor")
+    pub fn new(contents: &str) -> Self {
+        glib::Object::new(&[("contents", &contents)]).expect("Failed to create MarkdownEditor")
     }
 }

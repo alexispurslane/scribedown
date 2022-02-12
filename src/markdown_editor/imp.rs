@@ -1,4 +1,4 @@
-use std::cell::RefCell;
+use std::{borrow::Borrow, cell::RefCell};
 
 use gtk::{
     glib::{self, ParamSpec, ParamSpecObject, Value},
@@ -7,12 +7,14 @@ use gtk::{
     CompositeTemplate,
 };
 
+/// A textview inside a scrollview, with state to manage that and wysiwyg stuff later
 #[derive(Default, Debug, CompositeTemplate)]
 #[template(file = "markdown_editor.ui")]
 pub struct MarkdownEditor {
     /// UI elements we need access to
     #[template_child]
     pub text_editor: TemplateChild<gtk::TextView>,
+
     // Internal state
     contents: RefCell<String>,
     text_buffer: RefCell<Option<gtk::TextBuffer>>,
@@ -41,12 +43,12 @@ impl ObjectImpl for MarkdownEditor {
     fn properties() -> &'static [ParamSpec] {
         use once_cell::sync::Lazy;
         static PROPERTIES: Lazy<Vec<ParamSpec>> = Lazy::new(|| {
-            vec![ParamSpecObject::new(
+            vec![glib::ParamSpecString::new(
                 "contents",
                 "Contents",
                 "Contents",
-                String::static_type(),
-                glib::ParamFlags::READWRITE | glib::ParamFlags::CONSTRUCT_ONLY,
+                None,
+                glib::ParamFlags::READWRITE,
             )]
         });
         PROPERTIES.as_ref()
@@ -57,6 +59,11 @@ impl ObjectImpl for MarkdownEditor {
             "contents" => {
                 let contents = value.get().unwrap();
                 self.contents.replace(contents);
+                let tb = gtk::TextBuffer::builder()
+                    .text(&self.contents.borrow())
+                    .build();
+                self.text_editor.set_buffer(Some(&tb));
+                self.text_buffer.replace(Some(tb));
             }
             _ => unimplemented!(),
         }
@@ -70,11 +77,6 @@ impl ObjectImpl for MarkdownEditor {
     }
     fn constructed(&self, obj: &Self::Type) {
         self.parent_constructed(obj);
-        let tb = gtk::TextBuffer::builder()
-            .text(&self.contents.borrow())
-            .build();
-        self.text_editor.set_buffer(Some(&tb));
-        self.text_buffer.replace(Some(tb));
     }
 }
 
