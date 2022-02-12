@@ -22,7 +22,8 @@ pub fn get_md_files(path: String) -> HashMap<String, Document> {
             let mut file =
                 File::open(full_path.clone()).expect("Existant file suddenly non-existant!");
             let mut contents = String::new();
-            file.read_to_string(&mut contents);
+            file.read_to_string(&mut contents)
+                .expect("Could not read file!");
             if let Some(title) = get_md_file_title(&contents) {
                 file_title = title;
             }

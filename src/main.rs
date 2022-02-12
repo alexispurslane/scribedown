@@ -2,6 +2,7 @@ mod app;
 mod document_list;
 mod file_operations;
 mod macro_utils;
+mod markdown_editor;
 mod scribedown_window;
 use std::cell::RefCell;
 use std::rc::Rc;

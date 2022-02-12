@@ -1,7 +1,7 @@
 use crate::document_list;
 use crate::file_operations;
 use crate::macro_utils::*;
-use gtk::TextBuffer;
+use crate::markdown_editor;
 use gtk::{glib::Value, prelude::*, subclass::prelude::*};
 use std::cell::RefCell;
 use std::collections::HashMap;
@@ -66,8 +66,7 @@ impl App {
             });
         }
 
-        // Put the contents of the currently selected document in the text
-        // editor and switch the notebook tab to the correct tab
+        // Connect row selection callback for document list
         let sd_for_list = sd.clone();
         {
             let osd = sd.borrow();
@@ -75,41 +74,16 @@ impl App {
 
             document_list.connect_row_selected(move |_dl, row| {
                 println!("Row selected!");
-
                 // Get a pointer to the state to use for this callback in
-                // perpetuity, and borrow it.
-                let sd3 = Rc::clone(&sd_for_list);
-                let osd = sd3.borrow();
-
-                // Get the GUI list box row that was just selected
-                let row = unwrap_or_return!(row);
-                let list_box_row =
-                    unwrap_or_return!(row.downcast_ref::<document_list::ListBoxRow>());
-
-                // Get the row data associated with that GUI element
-                let row_data_val: Value = list_box_row.property("row-data");
-                let row_data = unwrap_ok_or_return!(row_data_val.get::<document_list::RowData>());
-                let path = row_data.property::<String>("path");
-                println!("Path: {:?}", path);
-
-                // Get document that that row data points to from the current project
-                let project = unwrap_or_return!(&osd.state.project);
-                let doc = unwrap_or_return!(project.docs.get(&path));
-                println!("Document title: {:?}", doc.title);
-
-                // Update the text editor
-                let text_buffer = TextBuffer::builder()
-                    .text(doc.contents.clone().unwrap().as_str())
-                    .build();
-
-                osd.window.imp().text_editor.set_buffer(Some(&text_buffer));
+                // perpetuity
+                Self::open_document(row, Rc::clone(&sd_for_list));
             });
         }
     }
 
-    /// Open a folder chooser dialog which, when a folder is selected:
-    /// 1. creates a new project with that path
-    /// 2. sets the headerbar's subtitle to that path.
+    /* ---------------------- GUI HELPERS ---------------------- */
+
+    /// Open a folder chooser dialog that calls `open_project`
     pub async fn open_project_dialog(sd: Rc<RefCell<Self>>) {
         let folder_dialog = gtk::FileChooserDialog::builder()
             .title("Open project folder...")
@@ -129,6 +103,53 @@ impl App {
         folder_dialog.close();
     }
 
+    /* ------------------------ ACTIONS ------------------------ */
+
+    /// Put the contents of the currently selected document in the text
+    /// editor and switch the notebook tab to the correct tab (or add a tab if
+    /// its a new document)
+    fn open_document(row: Option<&gtk::ListBoxRow>, sd3: Rc<RefCell<Self>>) {
+        // Borrow state stored in pointer
+        let osd = sd3.borrow();
+
+        // Get the GUI list box row that was just selected
+        let row = unwrap_or_return!(row);
+        let list_box_row = unwrap_or_return!(row.downcast_ref::<document_list::ListBoxRow>());
+
+        // Get the row data associated with that GUI element
+        let row_data_val: Value = list_box_row.property("row-data");
+        let row_data = unwrap_ok_or_return!(row_data_val.get::<document_list::RowData>());
+        let path = row_data.property::<String>("path");
+        println!("Path: {:?}", path);
+
+        // Get document that that row data points to from the current project
+        let project = unwrap_or_return!(&osd.state.project);
+        let doc = unwrap_or_return!(project.docs.get(&path));
+        println!("Document title: {:?}", doc.title);
+
+        // Open document in new notebook tab
+
+        // Create a text buffer from the document's contents
+        let contents = doc.contents.clone().unwrap();
+
+        // Create a new text editor textview with those contents
+        let text_editor = markdown_editor::MarkdownEditor::new(&contents);
+        let scrolled = gtk::ScrolledWindow::builder().child(&text_editor).build();
+        scrolled.show_all();
+
+        let tab_label = gtk::Label::new(Some(doc.title.as_str()));
+        tab_label.show();
+
+        // open that text editor in a new tab
+        println!("Appending page\n");
+        let notebook = &osd.window.imp().editor_notebook;
+        let page_num = notebook.append_page(&scrolled, Some(&tab_label));
+        notebook.set_current_page(Some(page_num));
+    }
+
+    /// Update the back end state to point to a new project with the proper
+    /// path and doc list. Then update the headerbar and create a document list
+    /// model out of the doc list for the side bar to use.
     pub fn open_project(sd: Rc<RefCell<Self>>, path: String) {
         let mut sdm = sd.borrow_mut();
         let docs = file_operations::get_md_files(path.clone());
