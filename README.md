@@ -48,6 +48,7 @@ interoperability, by choosing a DE to target. We chose GNOME.
 
 ### To-do list
 
+## Version 0.1.0 Roadmap
 - [X] Open project folder
 - [X] Get list of markdown documents in project and display them on the sidebar
 - [X] Display markdown file title from top header or YAML metadata in document
@@ -64,6 +65,23 @@ list
 document list rows
 - [ ] Filter documents by tag
 - [ ] Open file by name using <kbd>Ctrl</kbd> + <kbd>P</kbd>
+- [ ] Parse markdown and get text ranges for each formatting
+- [ ] Create tags for those ranges depending on what they are, and add them to
+  the textview
+- [ ] Update parsing and tags every time a change is made
+
+## Version 0.2.0 Roadmap
+
+- [ ] Automatically fold YAML metadata
+- [ ] Hide Markdown formatting entirely except when adjacent to cursor
+- [ ] Get document outline and display in alternate sidebar tab
+
+## Version 0.3.0 Roadmap
+
+- [ ] Dialog to view and modify basic YAML metadata for a file
+- [ ] Programmable dialog to to publish projects
+- [ ] Store project metadata
+- [ ] Store application state, such as what files are open
 
 ### Demo videos
 
