@@ -60,7 +60,7 @@ interoperability, by choosing a DE to target. We chose GNOME.
 list
 - [X] Open document contents when clicked in the side bar
 - [ ] Search through files in document list
-- [ ] When a file is clicked, open in new tab or switch to tab
+- [X] When a file is clicked, open in new tab or switch to tab
 - [ ] Allow closing tabs
 - [ ] Create new file when "New" button is pressed
 - [ ] Save file contents on <kbd>Ctrl</kbd> + <kbd>S</kbd>

@@ -2,7 +2,12 @@ use crate::document_list;
 use crate::file_operations;
 use crate::macro_utils::*;
 use crate::markdown_editor;
-use gtk::{glib::Value, prelude::*, subclass::prelude::*};
+use gtk::gdk;
+use gtk::{
+    glib::{Receiver, Sender, Value},
+    prelude::*,
+    subclass::prelude::*,
+};
 use std::cell::RefCell;
 use std::collections::HashMap;
 use std::rc::Rc;
@@ -46,6 +51,13 @@ pub struct App {
     pub document_list_model: Option<document_list::Model>,
 }
 
+enum AppKeyEvent {
+    Undo,
+    Redo,
+    Save,
+    CloseTab,
+}
+
 impl App {
     /// Connect all callbacks
     pub fn connect_all(sd: Rc<RefCell<Self>>) {
@@ -56,8 +68,8 @@ impl App {
         // something inside a `move` callback borrows it.
 
         // Connect open button callback
-        let sd_for_button = sd.clone();
         {
+            let sd_for_button = sd.clone();
             let osd = sd.borrow();
             let button = &osd.window.imp().open_button;
 
@@ -69,8 +81,8 @@ impl App {
         }
 
         // Connect row selection callback for document list
-        let sd_for_list = sd.clone();
         {
+            let sd_for_list = sd.clone();
             let osd = sd.borrow();
             let document_list = &osd.window.imp().document_list;
 
@@ -79,6 +91,52 @@ impl App {
                 // Get a pointer to the state to use for this callback in
                 // perpetuity
                 Self::open_document(row, Rc::clone(&sd_for_list));
+            });
+        }
+
+        // Connect key command callback for app
+        {
+            let osd = sd.borrow();
+            let (tx, rx): (Sender<AppKeyEvent>, Receiver<AppKeyEvent>) =
+                gtk::glib::MainContext::channel(gtk::glib::PRIORITY_DEFAULT);
+            let _ = &osd.window.connect("key_press_event", false, move |values| {
+                let raw_event = &values[1].get::<gdk::Event>().unwrap();
+                match raw_event.downcast_ref::<gdk::EventKey>() {
+                    Some(event) => {
+                        if event.state().contains(gdk::ModifierType::CONTROL_MASK) {
+                            match event.keyval().to_unicode().unwrap_or('\0') {
+                                's' => {
+                                    tx.send(AppKeyEvent::Save).unwrap();
+                                }
+                                'w' => {
+                                    tx.send(AppKeyEvent::CloseTab).unwrap();
+                                }
+                                'z' => {
+                                    tx.send(AppKeyEvent::Undo).unwrap();
+                                }
+                                'Y' => {
+                                    tx.send(AppKeyEvent::Redo).unwrap();
+                                }
+                                x => println!("{:?}", x),
+                            }
+                        }
+                    }
+                    None => {}
+                }
+                let result = (true).to_value();
+                Some(result)
+            });
+            let sd_for_key_event = sd.clone();
+            rx.attach(None, move |evt: AppKeyEvent| {
+                let sd = sd_for_key_event.borrow();
+                match evt {
+                    AppKeyEvent::CloseTab => {
+                        let notebook = &sd.window.imp().editor_notebook;
+                        notebook.remove_page(notebook.current_page());
+                    }
+                    _ => {}
+                }
+                Continue(true)
             });
         }
     }
