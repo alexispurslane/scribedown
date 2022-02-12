@@ -1,5 +1,7 @@
 # ScribeDown
 
+![Scribedown v0.0.1 screenshot](./screenshotv0.0.1.png)
+
 ## Beautiful, Clean, Writer-Oriented
 
 The goal of ScribeDown is to make Markdown the best, cleanest, nicest
