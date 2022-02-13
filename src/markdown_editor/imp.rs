@@ -17,7 +17,9 @@ pub struct MarkdownEditor {
 
     // Internal state
     contents: RefCell<String>,
-    text_buffer: RefCell<Option<gtk::TextBuffer>>,
+    path: RefCell<String>,
+    title: RefCell<String>,
+    pub text_buffer: RefCell<Option<gtk::TextBuffer>>,
     // probably going to also need to store a RefCell to:
     // 1. the parsed markdown
     // 2. the undo tree
@@ -43,13 +45,29 @@ impl ObjectImpl for MarkdownEditor {
     fn properties() -> &'static [ParamSpec] {
         use once_cell::sync::Lazy;
         static PROPERTIES: Lazy<Vec<ParamSpec>> = Lazy::new(|| {
-            vec![glib::ParamSpecString::new(
-                "contents",
-                "Contents",
-                "Contents",
-                None,
-                glib::ParamFlags::READWRITE,
-            )]
+            vec![
+                glib::ParamSpecString::new(
+                    "contents",
+                    "Contents",
+                    "Contents",
+                    None,
+                    glib::ParamFlags::READWRITE,
+                ),
+                glib::ParamSpecString::new(
+                    "path",
+                    "Path",
+                    "Path",
+                    None,
+                    glib::ParamFlags::READWRITE,
+                ),
+                glib::ParamSpecString::new(
+                    "title",
+                    "Title",
+                    "Title",
+                    None,
+                    glib::ParamFlags::READWRITE,
+                ),
+            ]
         });
         PROPERTIES.as_ref()
     }
@@ -65,6 +83,14 @@ impl ObjectImpl for MarkdownEditor {
                 self.text_editor.set_buffer(Some(&tb));
                 self.text_buffer.replace(Some(tb));
             }
+            "path" => {
+                let path = value.get().unwrap();
+                self.path.replace(path);
+            }
+            "title" => {
+                let title = value.get().unwrap();
+                self.title.replace(title);
+            }
             _ => unimplemented!(),
         }
     }
@@ -72,6 +98,8 @@ impl ObjectImpl for MarkdownEditor {
     fn property(&self, _obj: &Self::Type, _id: usize, pspec: &ParamSpec) -> Value {
         match pspec.name() {
             "contents" => self.contents.borrow().to_value(),
+            "title" => self.title.borrow().to_value(),
+            "path" => self.path.borrow().to_value(),
             _ => unimplemented!(),
         }
     }

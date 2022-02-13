@@ -1,5 +1,6 @@
 use crate::document_list;
 use crate::file_operations;
+use crate::gtk_utils::*;
 use crate::macro_utils::*;
 use crate::markdown_editor;
 use gtk::gdk;
@@ -13,12 +14,11 @@ use std::collections::HashMap;
 use std::rc::Rc;
 
 /// A ScribeDown project
-#[derive(Clone)]
 pub struct Project {
     /// Folder path
     pub path: String,
     /// Documents, indexed by their path
-    pub docs: HashMap<String, Document>,
+    pub docs: HashMap<String, RefCell<Document>>,
     /// Keeps a list of open tabs by document title, and their index in the notebook
     pub tabs: HashMap<String, u32>,
 }
@@ -35,7 +35,6 @@ pub struct Document {
 }
 
 /// Application state
-#[derive(Clone)]
 pub struct State {
     /// Current open project
     pub project: Option<Project>,
@@ -123,16 +122,19 @@ impl App {
                     }
                     None => {}
                 }
-                let result = (true).to_value();
+                let result = (false).to_value();
                 Some(result)
             });
             let sd_for_key_event = sd.clone();
             rx.attach(None, move |evt: AppKeyEvent| {
-                let sd = sd_for_key_event.borrow();
                 match evt {
                     AppKeyEvent::CloseTab => {
+                        let sd = sd_for_key_event.borrow();
                         let notebook = &sd.window.imp().editor_notebook;
                         notebook.remove_page(notebook.current_page());
+                    }
+                    AppKeyEvent::Save => {
+                        Self::save_document(Rc::clone(&sd_for_key_event));
                     }
                     _ => {}
                 }
@@ -183,12 +185,12 @@ impl App {
         // Get the row data associated with that GUI element
         let row_data_val: Value = list_box_row.property("row-data");
         let row_data = unwrap_ok_or_return!(row_data_val.get::<document_list::RowData>());
-        let path = row_data.property::<String>("path");
-        println!("Path: {:?}", path);
+        let title = row_data.property::<String>("title");
+        println!("Title: {:?}", title);
 
         // Get document that that row data points to from the current project
         let project = unwrap_or_return!(&mut osd.state.project);
-        let doc = unwrap_or_return!(project.docs.get(&path));
+        let doc = unwrap_or_return!(project.docs.get(&title)).borrow();
         println!("Document title: {:?}", doc.title);
         let window = &osd.window.imp();
         let notebook = &window.editor_notebook;
@@ -198,11 +200,12 @@ impl App {
         } else {
             // Open document in new notebook tab
 
-            // Create a text buffer from the document's contents
-            let contents = doc.contents.clone().unwrap();
-
             // Create a new text editor textview with those contents
-            let text_editor = markdown_editor::MarkdownEditor::new(&contents);
+            let text_editor = markdown_editor::MarkdownEditor::new(
+                &doc.path,
+                &doc.title,
+                &doc.contents.clone().unwrap(),
+            );
             let scrolled = gtk::ScrolledWindow::builder().child(&text_editor).build();
             scrolled.show_all();
 
@@ -217,6 +220,42 @@ impl App {
         }
     }
 
+    /// Saves the contents of the text editor in the current tab to disk and
+    /// the back end project document model
+    pub fn save_document(sd: Rc<RefCell<Self>>) {
+        let sd = sd.borrow();
+        let notebook = &sd.window.imp().editor_notebook;
+        let page_num = notebook.current_page();
+
+        // Get text editor for tab
+        let raw_te = notebook
+            .nth_page(page_num)
+            .expect("Could not get current notebook page");
+        let sw = raw_te
+            .downcast::<gtk::ScrolledWindow>()
+            .expect("Current notebook page not a markdown editor?!");
+        let vp = sw
+            .child()
+            .expect("Scrollable window needs child!")
+            .downcast::<gtk::Viewport>()
+            .expect("Scrollable window needs Viewport child, instead got: ");
+        let markdown_editor = vp
+            .child()
+            .expect("Viewport window needs child!")
+            .downcast::<markdown_editor::MarkdownEditor>()
+            .expect("Viewport needs TextView child");
+
+        let path = markdown_editor.property::<String>("path");
+        let doc = sd.state.project.as_ref().unwrap().docs.get(&path).unwrap();
+        // Get text editor contents
+        let buffer = markdown_editor.imp().text_editor.get().buffer().unwrap();
+        let new_contents = buffer.text(&buffer.start_iter(), &buffer.end_iter(), false);
+        let mut doc = doc.borrow_mut();
+        doc.contents = new_contents.map(|x| String::from(x.as_str()));
+
+        // TODO: Write new doc contents to file
+    }
+
     /// Update the back end state to point to a new project with the proper
     /// path and doc list. Then update the headerbar and create a document list
     /// model out of the doc list for the side bar to use.
@@ -227,7 +266,10 @@ impl App {
         // Update back-end state
         sdm.state.project = Some(Project {
             path: path.clone(),
-            docs: docs.clone(),
+            docs: docs
+                .iter()
+                .map(|(k, v)| (k.clone(), RefCell::new(v.clone())))
+                .collect(),
             tabs: HashMap::new(),
         });
 
@@ -237,8 +279,8 @@ impl App {
 
         // Update document list model
         let dlm = document_list::Model::new();
-        for (path, doc) in docs {
-            let rd = document_list::RowData::new(&path, &doc.title);
+        for (title, doc) in docs {
+            let rd = document_list::RowData::new(&doc.path, &title);
             dlm.append(&rd);
         }
         imp.document_list.bind_model(Some(&dlm), move |item| {

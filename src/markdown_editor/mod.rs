@@ -1,4 +1,6 @@
-use gtk::glib;
+use crate::app::Document;
+use gtk::{glib, prelude::*, subclass::prelude::ObjectSubclassIsExt};
+use std::cell::RefCell;
 
 mod imp;
 
@@ -9,7 +11,8 @@ glib::wrapper! {
 }
 
 impl MarkdownEditor {
-    pub fn new(contents: &str) -> Self {
-        glib::Object::new(&[("contents", &contents)]).expect("Failed to create MarkdownEditor")
+    pub fn new(path: &str, title: &str, contents: &str) -> Self {
+        glib::Object::new(&[("path", &path), ("title", &title), ("contents", &contents)])
+            .expect("Failed to create MarkdownEditor")
     }
 }

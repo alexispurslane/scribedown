@@ -1,6 +1,7 @@
 mod app;
 mod document_list;
 mod file_operations;
+mod gtk_utils;
 mod macro_utils;
 mod markdown_editor;
 mod scribedown_window;

@@ -1,4 +1,4 @@
-use gtk::{prelude::*};
+use gtk::prelude::*;
 use gtk::subclass::prelude::*;
 use gtk::{glib, CompositeTemplate};
 
@@ -14,8 +14,6 @@ pub struct Window {
     // Main panel
     #[template_child]
     pub editor_notebook: TemplateChild<gtk::Notebook>,
-    #[template_child]
-    pub text_editor: TemplateChild<gtk::TextView>,
 
     // Header bar
     #[template_child]

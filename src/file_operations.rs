@@ -5,7 +5,7 @@ use std::collections::HashMap;
 use std::fs::{read_dir, File};
 use std::io::Read;
 
-pub fn get_md_files(path: String) -> HashMap<String, Document> {
+pub fn get_md_files<'a>(path: String) -> HashMap<String, Document> {
     if let Ok(paths) = read_dir(path) {
         let mut hm = HashMap::new();
         for path in paths {
@@ -29,7 +29,7 @@ pub fn get_md_files(path: String) -> HashMap<String, Document> {
             }
 
             hm.insert(
-                full_path.clone(),
+                file_title.clone(),
                 Document {
                     path: full_path,
                     title: file_title,
