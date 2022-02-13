@@ -19,7 +19,6 @@ pub fn get_md_files<'a>(path: String) -> HashMap<String, Document> {
                 continue;
             }
 
-            // We're going to have to read the file anyway to get the title, might as well just store the contents now too.
             let mut file =
                 File::open(full_path.clone()).expect("Existant file suddenly non-existant!");
             let mut contents = String::new();
