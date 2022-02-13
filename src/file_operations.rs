@@ -3,17 +3,18 @@ use lazy_static::lazy_static;
 use regex::Regex;
 use std::collections::HashMap;
 use std::fs::{read_dir, File};
-use std::io::Read;
+use std::io::{Read, Write};
 
 pub fn get_md_files<'a>(path: String) -> HashMap<String, Document> {
-    if let Ok(paths) = read_dir(path) {
-        let mut hm = HashMap::new();
-        for path in paths {
-            let p = path.unwrap();
+    if let Ok(entries) = read_dir(path) {
+        let mut sorted_entries: Vec<_> = entries.map(|r| r.unwrap()).collect();
+        sorted_entries.sort_by_key(|dir| dir.path());
 
+        let mut hm = HashMap::new();
+        for entry in sorted_entries {
             // Basic metadata about file
-            let full_path = String::from(p.path().to_string_lossy());
-            let mut file_title = String::from(p.file_name().to_string_lossy());
+            let full_path = String::from(entry.path().to_string_lossy());
+            let mut file_title = String::from(entry.file_name().to_string_lossy());
             if !file_title.ends_with(".md") {
                 continue;
             }
@@ -33,7 +34,6 @@ pub fn get_md_files<'a>(path: String) -> HashMap<String, Document> {
                 Document {
                     path: full_path,
                     title: file_title,
-                    contents: Some(contents),
                 },
             );
         }
@@ -57,4 +57,20 @@ pub fn get_md_file_title(contents: &String) -> Option<String> {
         }
     }
     None
+}
+
+pub fn get_file_contents(path: &String) -> Option<String> {
+    let mut file = File::open(path).expect("Existant file suddenly non-existant!");
+    let mut contents = String::new();
+    match file.read_to_string(&mut contents) {
+        Ok(_) => Some(contents),
+        Err(e) => panic!("{:?}", e),
+    }
+}
+
+pub fn save_file_contents(path: &String, buf: String) {
+    println!("Saving to file: {:?}", path);
+    let mut file = File::create(path).expect("Existant file suddenly non-existant!");
+    file.write_all(buf.as_bytes())
+        .expect("Cannot write to file (read-only?)");
 }

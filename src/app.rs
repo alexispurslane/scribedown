@@ -1,6 +1,5 @@
 use crate::document_list;
 use crate::file_operations;
-use crate::gtk_utils::*;
 use crate::macro_utils::*;
 use crate::markdown_editor;
 use gtk::gdk;
@@ -18,7 +17,7 @@ pub struct Project {
     /// Folder path
     pub path: String,
     /// Documents, indexed by their path
-    pub docs: HashMap<String, RefCell<Document>>,
+    pub docs: HashMap<String, Document>,
     /// Keeps a list of open tabs by document title, and their index in the notebook
     pub tabs: HashMap<String, u32>,
 }
@@ -30,8 +29,6 @@ pub struct Document {
     pub path: String,
     /// Document name
     pub title: String,
-    /// Document plaintext markdown contents
-    pub contents: Option<String>,
 }
 
 /// Application state
@@ -190,7 +187,7 @@ impl App {
 
         // Get document that that row data points to from the current project
         let project = unwrap_or_return!(&mut osd.state.project);
-        let doc = unwrap_or_return!(project.docs.get(&title)).borrow();
+        let doc = unwrap_or_return!(project.docs.get(&title));
         println!("Document title: {:?}", doc.title);
         let window = &osd.window.imp();
         let notebook = &window.editor_notebook;
@@ -201,11 +198,10 @@ impl App {
             // Open document in new notebook tab
 
             // Create a new text editor textview with those contents
-            let text_editor = markdown_editor::MarkdownEditor::new(
-                &doc.path,
-                &doc.title,
-                &doc.contents.clone().unwrap(),
-            );
+            // FIXME: Load contents from file
+            let contents = file_operations::get_file_contents(&doc.path).expect("Cannot open file");
+            let text_editor =
+                markdown_editor::MarkdownEditor::new(&doc.path, &doc.title, &contents);
             let scrolled = gtk::ScrolledWindow::builder().child(&text_editor).build();
             scrolled.show_all();
 
@@ -246,14 +242,15 @@ impl App {
             .expect("Viewport needs TextView child");
 
         let path = markdown_editor.property::<String>("path");
-        let doc = sd.state.project.as_ref().unwrap().docs.get(&path).unwrap();
         // Get text editor contents
         let buffer = markdown_editor.imp().text_editor.get().buffer().unwrap();
         let new_contents = buffer.text(&buffer.start_iter(), &buffer.end_iter(), false);
-        let mut doc = doc.borrow_mut();
-        doc.contents = new_contents.map(|x| String::from(x.as_str()));
+        let new_contents = new_contents
+            .map(|x| String::from(x.as_str()))
+            .expect("GString should convert to String");
 
         // TODO: Write new doc contents to file
+        file_operations::save_file_contents(&path, new_contents);
     }
 
     /// Update the back end state to point to a new project with the proper
@@ -266,10 +263,7 @@ impl App {
         // Update back-end state
         sdm.state.project = Some(Project {
             path: path.clone(),
-            docs: docs
-                .iter()
-                .map(|(k, v)| (k.clone(), RefCell::new(v.clone())))
-                .collect(),
+            docs: docs.clone(),
             tabs: HashMap::new(),
         });
 

@@ -1,6 +1,4 @@
-use crate::app::Document;
-use gtk::{glib, prelude::*, subclass::prelude::ObjectSubclassIsExt};
-use std::cell::RefCell;
+use gtk::glib;
 
 mod imp;
 

@@ -1,7 +1,7 @@
-use std::{borrow::Borrow, cell::RefCell};
+use std::cell::RefCell;
 
 use gtk::{
-    glib::{self, ParamSpec, ParamSpecObject, Value},
+    glib::{self, ParamSpec, Value},
     prelude::*,
     subclass::prelude::*,
     CompositeTemplate,
