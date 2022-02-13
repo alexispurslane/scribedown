@@ -61,9 +61,9 @@ list
 - [X] Open document contents when clicked in the side bar
 - [ ] Search through files in document list
 - [X] When a file is clicked, open in new tab or switch to tab
-- [ ] Allow closing tabs
+- [X] Allow closing tabs
 - [ ] Create new file when "New" button is pressed
-- [ ] Save file contents on <kbd>Ctrl</kbd> + <kbd>S</kbd>
+- [X] Save file contents on <kbd>Ctrl</kbd> + <kbd>S</kbd>
 - [ ] Undo and redo key commands
 - [ ] Update file title when file is changed in document list sidebar
 - [ ] Parse tags from YAML metadata for each document and display them in the

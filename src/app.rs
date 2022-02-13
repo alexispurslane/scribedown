@@ -86,7 +86,7 @@ impl App {
                 println!("Row selected!");
                 // Get a pointer to the state to use for this callback in
                 // perpetuity
-                Self::open_document(row, Rc::clone(&sd_for_list));
+                Self::open_document_or_switch(Rc::clone(&sd_for_list), row);
             });
         }
 
@@ -164,12 +164,11 @@ impl App {
 
     /* ------------------------ ACTIONS ------------------------ */
 
-    /// Put the contents of the currently selected document in the text
-    /// editor and switch the notebook tab to the correct tab (or add a tab if
-    /// its a new document)
-    fn open_document(row: Option<&gtk::ListBoxRow>, sd3: Rc<RefCell<Self>>) {
+    /// Switch to the tab corresponding to the document clicked, or open that tab and populate its markdown editor
+    /// with the correct document if the tab isn't already open
+    fn open_document_or_switch(sd: Rc<RefCell<Self>>, row: Option<&gtk::ListBoxRow>) {
         // Borrow state stored in pointer
-        let mut osd = sd3.borrow_mut();
+        let mut osd = sd.borrow_mut();
         // NOTE: This is probably dangerous, but as long as we only need to
         // mutate `osd.state`, and read from `osd.window.imp()`, it should be
         // fine!
@@ -186,34 +185,75 @@ impl App {
         println!("Title: {:?}", title);
 
         // Get document that that row data points to from the current project
-        let project = unwrap_or_return!(&mut osd.state.project);
-        let doc = unwrap_or_return!(project.docs.get(&title));
-        println!("Document title: {:?}", doc.title);
+        let (doc, page_num) = {
+            let project = unwrap_or_return!(&osd.state.project);
+            let doc = unwrap_or_return!(project.docs.get(&title));
+            println!("Document title: {:?}", doc.title);
+            (doc.clone(), project.tabs.get(&doc.title))
+        };
+
         let window = &osd.window.imp();
         let notebook = &window.editor_notebook;
 
-        if let Some(page_num) = project.tabs.get(&doc.title) {
+        if let Some(page_num) = page_num {
             notebook.set_current_page(Some(*page_num));
         } else {
-            // Open document in new notebook tab
-
-            // Create a new text editor textview with those contents
-            // FIXME: Load contents from file
-            let contents = file_operations::get_file_contents(&doc.path).expect("Cannot open file");
-            let text_editor =
-                markdown_editor::MarkdownEditor::new(&doc.path, &doc.title, &contents);
-            let scrolled = gtk::ScrolledWindow::builder().child(&text_editor).build();
-            scrolled.show_all();
-
-            let tab_label = gtk::Label::new(Some(doc.title.as_str()));
-            tab_label.show();
-
-            // open that text editor in a new tab
-            println!("Appending page\n");
-            let page_num = notebook.append_page(&scrolled, Some(&tab_label));
-            notebook.set_current_page(Some(page_num));
-            project.tabs.insert(doc.title.clone(), page_num);
+            Self::open_document(
+                Rc::clone(&sd),
+                notebook,
+                doc,
+                unwrap_or_return!(osd.state.project.as_mut()),
+                true,
+            );
         }
+    }
+
+    // Opens up a tab with a new document, and adds that document to the project
+    pub fn new_document(sd: Rc<RefCell<Self>>, title: String, path: String) {
+        let mut osd = sd.borrow_mut();
+
+        let window = &osd.window.imp();
+        let notebook = &window.editor_notebook;
+
+        let new_doc = Document {
+            path: path.clone(),
+            title: title.clone(),
+        };
+
+        let project = unwrap_or_return!(osd.state.project.as_mut());
+        project.docs.insert(title, new_doc.clone());
+
+        Self::open_document(Rc::clone(&sd), notebook, new_doc, project, true);
+    }
+
+    // Open a new notebook tab and populate its markdown editor with the given
+    // document, reading the documents contents from a file if told to do so
+    pub fn open_document(
+        sd: Rc<RefCell<Self>>,
+        notebook: &gtk::Notebook,
+        doc: Document,
+        project: &mut Project,
+        load_from_file: bool,
+    ) {
+        // Open document in new notebook tab
+
+        // Create a new text editor textview with those contents
+        let contents = if load_from_file {
+            file_operations::get_file_contents(&doc.path).expect("Cannot open file")
+        } else {
+            String::from("")
+        };
+        let text_editor = markdown_editor::MarkdownEditor::new(&doc.path, &doc.title, &contents);
+        text_editor.show_all();
+
+        let tab_label = gtk::Label::new(Some(doc.title.as_str()));
+        tab_label.show();
+
+        // open that text editor in a new tab
+        println!("Appending page\n");
+        let page_num = notebook.append_page(&text_editor, Some(&tab_label));
+        notebook.set_current_page(Some(page_num));
+        project.tabs.insert(doc.title.clone(), page_num);
     }
 
     /// Saves the contents of the text editor in the current tab to disk and
@@ -227,19 +267,9 @@ impl App {
         let raw_te = notebook
             .nth_page(page_num)
             .expect("Could not get current notebook page");
-        let sw = raw_te
-            .downcast::<gtk::ScrolledWindow>()
-            .expect("Current notebook page not a markdown editor?!");
-        let vp = sw
-            .child()
-            .expect("Scrollable window needs child!")
-            .downcast::<gtk::Viewport>()
-            .expect("Scrollable window needs Viewport child, instead got: ");
-        let markdown_editor = vp
-            .child()
-            .expect("Viewport window needs child!")
+        let markdown_editor = raw_te
             .downcast::<markdown_editor::MarkdownEditor>()
-            .expect("Viewport needs TextView child");
+            .expect("Notebook page needs TextView child");
 
         let path = markdown_editor.property::<String>("path");
         // Get text editor contents
